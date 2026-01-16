@@ -4,100 +4,165 @@ import { signIn, getSession } from "next-auth/react";
 import Link from "next/link";
 
 function LoginPage() {
-    const [email, setEmail] = useState("");
-    const [password, setPassword] = useState("");
-    const [error, setError] = useState("");
-    const [isLoading, setIsLoading] = useState(false);
-    const router = useRouter();
-    
-    async function handleSubmit(e) {
-        e.preventDefault();
-        setIsLoading(true);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const router = useRouter();
 
-        const res = await signIn("credentials", {
-            email,
-            password,
-            // callbackUrl: `${process.env.NEXT_PUBLIC_NEXTAUTH_URL}`,
-            redirect: false,
-        });
+  async function handleSubmit(e) {
+    e.preventDefault();
+    setIsLoading(true);
+    setError("");
 
-        if (res?.ok) {
-            await new Promise((resolve) => setTimeout(resolve, 500));
-            const session = await getSession();
-            console.log(session)
+    const res = await signIn("credentials", {
+      email,
+      password,
+      redirect: false,
+    });
 
-            const userRole = session?.user?.role; // Assuming role is in user object
+    if (res?.ok) {
+      await new Promise((r) => setTimeout(r, 500));
+      const session = await getSession();
 
-            if (userRole === 'admin') {
-                router.push("/dashboard/admin");
-            } else if (userRole === 'user') {
-                router.push("/dashboard/user");
-            } else {
-                setError("Invalid role");
-            }
-        } else {
-            setError("Login failed. Please check your credentials.");
-        }
-        setIsLoading(false);
+      const userRole = session?.user?.role;
+
+      if (userRole === "admin") {
+        router.push("/dashboard/admin");
+      } else if (userRole === "user") {
+        router.push("/dashboard/user");
+      } else {
+        setError("Invalid role");
+      }
+    } else {
+      setError("Login failed. Please check your credentials.");
     }
 
-    return (
-        <div className="flex justify-center items-center m-auto p-3">
-            <form
-                onSubmit={handleSubmit}
-                className="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4"
-            >
-                <div className="mb-4">
-                    <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="email">
-                        Email
-                    </label>
-                    <input
-                        className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leadingtight focus:outline-none focus:shadow-outline"
-                        id="email"
-                        type="email"
-                        placeholder="Email"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                    />
-                </div>
+    setIsLoading(false);
+  }
 
-                <div className="mb-6">
-                    <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="password">
-                        Password
-                    </label>
-                    <input
-                        className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 mb-3
-leading-tight focus:outline-none focus:shadow-outline"
-                        id="password"
-                        type="password"
-                        placeholder="***********"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                    />
-                </div>
+  return (
+    <div style={styles.container}>
+      <form onSubmit={handleSubmit} style={styles.card}>
+        <h2 style={styles.title}>Login</h2>
 
-                {error && <p className="text-red-500 text-xs italic">{error}</p>}
-
-                <div className="flex flex-col items-center gap-3">
-                    <button
-                        className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded
-focus:outline-none focus:shadow-outline w-full"
-                        type="submit"
-                        disabled={isLoading}
-                    >
-                        {isLoading ? "Loading..." : "Sign In"}
-                    </button>
-
-                    <p className="text-sm text-gray-600">
-                        Belum punya akun?{" "}
-                        <Link href="/register" className="text-blue-500 hover:underline">
-                            Daftar di sini
-                        </Link>
-                    </p>
-                </div>
-            </form>
+        <div style={styles.inputContainer}>
+          <input
+            style={styles.input}
+            type="email"
+            placeholder="Email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+          />
         </div>
-    );
+
+        <div style={styles.inputContainer}>
+          <input
+            style={styles.input}
+            type="password"
+            placeholder="Password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+          />
+        </div>
+
+        {error && <p style={styles.error}>{error}</p>}
+
+        <div style={styles.buttonContainer}>
+          <button type="submit" disabled={isLoading} style={styles.button}>
+            {isLoading ? "Loading..." : "Sign In"}
+          </button>
+        </div>
+
+        <p style={styles.linkText}>
+          Belum punya akun?{" "}
+          <Link href="/register" style={styles.link}>
+            Daftar di sini
+          </Link>
+        </p>
+      </form>
+    </div>
+  );
 }
+
+const styles = {
+  container: {
+    minHeight: "100vh",
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+    background: "#ffe4ec",
+  },
+  card: {
+    background: "#fff",
+    padding: "32px 24px",
+    borderRadius: 12,
+    width: 400,
+    boxShadow: "0 10px 25px rgba(233,30,99,0.2)",
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "center",
+  },
+  title: {
+    textAlign: "center",
+    color: "#e91e63",
+    marginBottom: 24,
+    width: "100%",
+  },
+  inputContainer: {
+    width: "100%",
+    marginBottom: 16,
+    display: "flex",
+    justifyContent: "center",
+  },
+  input: {
+    width: "90%",
+    padding: "12px 16px",
+    borderRadius: 6,
+    border: "1px solid #f8bbd0",
+    fontSize: 14,
+  },
+  buttonContainer: {
+    width: "100%",
+    display: "flex",
+    justifyContent: "center",
+    marginBottom: 16,
+  },
+  button: {
+    width: "90%",
+    padding: 12,
+    background: "#e91e63",
+    color: "#fff",
+    border: "none",
+    borderRadius: 6,
+    cursor: "pointer",
+    fontSize: 14,
+    fontWeight: "bold",
+  },
+  error: {
+    color: "red",
+    fontSize: 12,
+    marginBottom: 10,
+    textAlign: "center",
+    width: "90%",
+    backgroundColor: "#ffe6e6",
+    padding: "8px 12px",
+    borderRadius: "4px",
+    border: "1px solid #ffcccc",
+  },
+  linkText: {
+    marginTop: 8,
+    textAlign: "center",
+    fontSize: 14,
+    width: "100%",
+  },
+  link: {
+    color: "#e91e63",
+    fontWeight: "bold",
+    textDecoration: "none",
+  },
+};
 
 export default LoginPage;
