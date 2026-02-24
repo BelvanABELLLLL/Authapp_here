@@ -4,6 +4,9 @@ import { PrismaAdapter } from "@next-auth/prisma-adapter";
 import prisma from "../../../lib/prisma";
 import bcrypt from "bcryptjs";
 
+//Kenapa wajib .toLowerCase()? Karena kita mau jamin role selalu lowercase, meski suatu hari database ada yang input "Admin" atau "ADMIN".
+//File lain jangan "Admin/User" atau "ADMIN/USER", soalnya role udah lowercase
+
 export default NextAuth({
     adapter: PrismaAdapter(prisma),
     providers: [
@@ -30,7 +33,7 @@ export default NextAuth({
                 return {
                     id: user.id,
                     email: user.email,
-                    role: user.role, // Pastikan role ikut dikembalikan
+                    role: user.role.toLowerCase().trim(),
                 };
             },
         }),
@@ -40,26 +43,46 @@ export default NextAuth({
             if (user) {
                 token.id = user.id;
                 token.email = user.email;
-                token.role = user.role; // Menyimpan role dalam token
+                token.name = user.name;
+                token.role = user.role;
             }
-            console.log("JWT Token:", token); // Debugging
+            console.log("JWT Token:", token);
             return token;
         },
         async session({ session, token }) {
             if (token) {
                 session.user.id = token.id;
                 session.user.email = token.email;
-                session.user.role = token.role; // Pastikan role tersedia di session
+                session.user.name = token.name;
+                session.user.role = token.role;
             }
-            console.log("Session data:", session); // Debugging
+            console.log("Session data:", session);
             return session;
         },
     },
-    secret: process.env.NEXTAUTH_SECRET, // Pastikan ada di .env.local
+    secret: process.env.NEXTAUTH_SECRET,
     session: {
-        strategy: "jwt", // Menggunakan JWT untuk session
+        strategy: "jwt",
+        maxAge: 24 * 60 * 60, // 24 jam
     },
+    
+    // Tambahkan untuk cookies
+    cookies: {
+        sessionToken: {
+            name: `next-auth.session-token`,
+            options: {
+                httpOnly: true,
+                sameSite: "lax",
+                path: "/",
+                secure: process.env.NODE_ENV === "production",
+            },
+        },
+    },
+    
     pages: {
-        signIn: "/auth/login", // Redirect jika gagal login (opsional)
+        signIn: "/login",
+        error: "/login",
     },
+    
+    debug: true, // Mengaktifkan debug
 });
